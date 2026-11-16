@@ -4,7 +4,7 @@
 **Curso:** FrontEndIVIVFI2026C · Taller Front End
 **Profesor:** Anggelo Huz
 **Integrantes:**
-- Martin Morfe°. (mmorfe-engineer)
+- Martin Morfe.°. (mmorfe-engineer)
 - Martin Alejandro Morfe Carballo (morfemartin)
 
 ## Enunciado Confirmado
