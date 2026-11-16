@@ -6,7 +6,7 @@ Evolución académica de [Renaissance Lexicon (E-Actividad 4.1)](https://github.
 
 ## Integrantes
 
-- Martin Morfe. (@mmorfe-engineer)
+- Martin Morfe.°. (@mmorfe-engineer)
 - Martin Alejandro Morfe Carballo (@morfemartin)
 
 ## Tecnologías

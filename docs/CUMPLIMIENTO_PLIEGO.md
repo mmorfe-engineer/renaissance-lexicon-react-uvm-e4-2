@@ -38,7 +38,7 @@ Todos están **PENDIENTES** hasta disponer de evidencia funcional.
 | TR-04 | Utilizar ReactJs | ⏳ | - | Framework principal |
 | TR-05 | Manipular el DOM mediante React | ⏳ | - | Renderizado declarativo, no imperativo |
 
-## Requisitos Pendientes (Detalle Técnico)
+## Objetivos internos de implementación
 
 - [ ] Implementación de Dictionary API
 - [ ] Sistema de búsqueda con debounce
