@@ -1,0 +1,113 @@
+/* Renaissance Lexicon - React Edition */
+/* Base Reset and Variables */
+
+:root {
+  --color-primary: #1e40af;
+  --color-secondary: #fbbf24;
+  --color-text: #1f2937;
+  --color-bg: #ffffff;
+  --color-surface: #f9fafb;
+  --color-border: #e5e7eb;
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-mono: 'Fira Code', monospace;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --color-text: #f9fafb;
+  --color-bg: #111827;
+  --color-surface: #1f2937;
+  --color-border: #374151;
+}
+
+/* Base Styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  line-height: 1.2;
+  margin: 0 0 0.5rem 0;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+
+p {
+  margin: 0 0 1rem 0;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Layout */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  width: 100%;
+}
+
+/* Header */
+.header {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header h1 {
+  color: var(--color-primary);
+}
+
+/* Utility Classes */
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+}
