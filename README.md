@@ -6,24 +6,23 @@ Evolución académica de [Renaissance Lexicon (E-Actividad 4.1)](https://github.
 
 ## Integrantes
 
-- **Martin Morfe Flores** - [@mmorfe-engineer](https://github.com/mmorfe-engineer) - morfefloresm@uvm.edu.ve
-- **Colaborador** - [@morfemartin](https://github.com/morfemartin) - morfecarballoma@uvm.edu.ve
+- Martin Morfe. (@mmorfe-engineer)
+- Martin Alejandro Morfe Carballo (@morfemartin)
 
 ## Tecnologías
 
-- React 18+
-- Vite 5+
+- React 19.3.1
+- React DOM 19.3.1
+- Vite 8.3.8
+- @vitejs/plugin-react 6.1.2
 - JavaScript (ES2020+)
 - CSS personalizado
 - Dictionary API
 - localStorage
-- GitHub Pages
 
 ## Despliegue
 
-La aplicación se despliega automáticamente en GitHub Pages:
-
-https://mmorfe-engineer.github.io/renaissance-lexicon-react-uvm-e4-2/
+Despliegue previsto: GitHub Pages.
 
 ## Documentación
 

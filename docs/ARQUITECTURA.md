@@ -6,17 +6,19 @@ Evolución académica de Renaissance Lexicon (E-Actividad 4.1) implementada con 
 
 ## Stack Tecnológico
 
-| Capa | Tecnología | Propósito |
-|------|------------|-----------|
-| Framework | React 18+ | Renderizado declarativo |
-| Build Tool | Vite 5+ | Bundling y desarrollo |
-| Lenguaje | JavaScript (ES2020+) | Lógica de aplicación |
-| Estilos | CSS personalizado | Diseño visual |
-| API Externa | Dictionary API | Búsqueda de definiciones |
-| Persistencia | localStorage | Almacenamiento local |
-| Despliegue | GitHub Pages | Hosting público |
+| Capa | Tecnología | Versión | Propósito |
+|------|------------|---------|-----------|
+| Framework | React | 19.3.1 | Renderizado declarativo |
+| Framework | React DOM | 19.3.1 | Renderizado en DOM |
+| Build Tool | Vite | 8.3.8 | Bundling y desarrollo |
+| Plugin | @vitejs/plugin-react | 6.1.2 | Integración React |
+| Lenguaje | JavaScript (ES2020+) | - | Lógica de aplicación |
+| Estilos | CSS personalizado | - | Diseño visual |
+| API Externa | Dictionary API | - | Búsqueda de definiciones |
+| Persistencia | localStorage | - | Almacenamiento local |
+| Despliegue | GitHub Pages | - | Hosting público |
 
-## Estructura de Archivos
+## Estructura de Archivos Objetivo
 
 ```
 renaissance-lexicon-react-uvm-e4-2/
@@ -86,12 +88,12 @@ Evento (UI) → Acción → Reducer → Estado → Re-render → DOM
             (Efectos: API, localStorage)
 ```
 
-## Requisitos No Funcionales
+## Objetivos Internos (sujetos a verificación)
 
-- **Responsive:** Adaptable a móviles, tablets y desktop
-- **Accesibilidad:** Cumplimiento WCAG 2.1 AA
-- **Rendimiento:** < 2s tiempo de carga inicial
-- **Compatibilidad:** Chrome, Firefox, Edge (últimas 2 versiones)
+- Responsive: Adaptable a móviles, tablets y desktop
+- Accesibilidad: Enfoque en estándares accesibles
+- Rendimiento: Tiempo de carga inicial aceptable
+- Compatibilidad: Navegadores modernos
 
 ## Continuidad con 4.1
 

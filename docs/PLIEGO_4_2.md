@@ -1,10 +1,11 @@
 # Pliego - E-Actividad 4.2
 
-**Asignatura:** Desarrollo de Aplicaciones Web
 **Institución:** Universidad Valle del Momboy (UVM)
+**Curso:** FrontEndIVIVFI2026C · Taller Front End
+**Profesor:** Anggelo Huz
 **Integrantes:**
-- Martin Morfe Flores (mmorfe-engineer / morfefloresm@uvm.edu.ve)
-- Colaborador por confirmar (morfemartin / morfecarballoma@uvm.edu.ve)
+- Martin Morfe. (mmorfe-engineer)
+- Martin Alejandro Morfe Carballo (morfemartin)
 
 ## Enunciado Confirmado
 
@@ -25,6 +26,7 @@ Desarrollar una aplicación web que implemente operaciones CRUD (Create, Read, U
 
 ## Notas
 
-- Los códigos TR-xx son internos de trazabilidad; no constituyen numeración oficial del profesor.
+- Los códigos TR-xx son identificadores internos de trazabilidad y no corresponden a numeración oficial del profesor.
 - Este documento registra únicamente el pliego confirmado a la fecha.
-- Si se recibe el pliego completo posterior a esta fecha, el texto oficial del profesor MANDA y deberá ser reconciliado antes del cierre.
+- **No se dispone todavía del pliego completo de 4.2.**
+- Cuando el profesor proporcione el pliego oficial, ese texto MANDA y deberá reconciliarse con esta implementación antes del cierre.
