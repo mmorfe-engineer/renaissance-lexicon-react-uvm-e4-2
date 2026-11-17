@@ -43,8 +43,8 @@ export function EntryEditor({ entry, onSave, onCancel }) {
       onSave({
         ...entry,
         notes,
-        learningStatus,
-        updatedAt: Date.now()
+        learningStatus
+        // updatedAt is added by prepareUpdate in App.jsx
       });
     }
   };

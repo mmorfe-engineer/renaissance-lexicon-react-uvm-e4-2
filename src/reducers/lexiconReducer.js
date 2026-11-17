@@ -1,6 +1,6 @@
 /**
  * Lexicon Reducer
- * Pure reducer for managing "Mi Léxico" entries
+ * Pure reducer for managing "Mi Lexicon" entries
  */
 
 /**
@@ -23,18 +23,6 @@ export const ACTIONS = {
 };
 
 /**
- * Generate unique ID
- * @returns {string} UUID v4
- */
-function generateId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback for environments without crypto.randomUUID
-  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-}
-
-/**
  * Check if entry already exists (by word, partOfSpeech, and definition)
  * @param {Array} entries - Current entries
  * @param {Object} newEntry - Entry to check
@@ -49,39 +37,24 @@ function isDuplicate(entries, newEntry) {
 }
 
 /**
- * Create initial entry structure
- * @param {Object} data - Data from Dictionary API
- * @returns {Object} Normalized entry
- */
-export function createEntry(data) {
-  return {
-    id: generateId(),
-    word: data.word || '',
-    phonetic: data.phonetic || data.phonetics?.[0]?.text || '',
-    partOfSpeech: data.partOfSpeech || (data.meanings?.[0]?.partOfSpeech || ''),
-    definition: data.definition || data.definitions?.[0] || '',
-    sourceUrl: data.sourceUrl || data.sourceUrls?.[0] || '',
-    notes: '',
-    learningStatus: LEARNING_STATUS.NEW,
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
-}
-
-/**
- * Lexicon reducer
+ * Lexicon reducer - PURE FUNCTION
+ * Does NOT generate IDs, timestamps, or randomness.
+ * Only validates duplicates and performs immutable updates.
+ * 
  * @param {Array} state - Current state
- * @param {Object} action - Action object
+ * @param {Object} action - Action object with type and payload
  * @returns {Array} New state
  */
 export function lexiconReducer(state, action) {
   switch (action.type) {
     case ACTIONS.HYDRATE_ENTRIES:
-      // Load entries from persistence
+      // Load entries from persistence - return payload as-is
       return action.payload || [];
 
     case ACTIONS.CREATE_ENTRY: {
-      const newEntry = createEntry(action.payload);
+      // Payload must be a complete entry with id, timestamps, etc.
+      // Reducer only validates duplicate and inserts
+      const newEntry = action.payload;
       
       // Check for duplicates
       if (isDuplicate(state, newEntry)) {
@@ -92,12 +65,12 @@ export function lexiconReducer(state, action) {
     }
 
     case ACTIONS.UPDATE_ENTRY: {
+      // Payload must include id and updatedAt timestamp
       const { id, ...updates } = action.payload;
-      const updatedAt = Date.now();
       
       return state.map(entry =>
         entry.id === id
-          ? { ...entry, ...updates, updatedAt }
+          ? { ...entry, ...updates }
           : entry
       );
     }
@@ -108,6 +81,50 @@ export function lexiconReducer(state, action) {
     default:
       return state;
   }
+}
+
+/**
+ * Entry factory - creates complete entry object with ID and timestamps
+ * Called OUTSIDE the reducer to maintain purity
+ * 
+ * @param {Object} data - Data to create entry from
+ * @returns {Object} Complete entry with all required fields
+ */
+export function createEntry(data) {
+  const id = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+  
+  const now = Date.now();
+  
+  return {
+    id,
+    word: data.word || '',
+    phonetic: data.phonetic || data.phonetics?.[0]?.text || '',
+    partOfSpeech: data.partOfSpeech || (data.meanings?.[0]?.partOfSpeech || ''),
+    definition: data.definition || data.definitions?.[0] || '',
+    sourceUrl: data.sourceUrl || data.sourceUrls?.[0] || '',
+    notes: '',
+    learningStatus: LEARNING_STATUS.NEW,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+/**
+ * Update entry factory - prepares update payload with new timestamp
+ * Called OUTSIDE the reducer to maintain purity
+ * 
+ * @param {Object} entry - Existing entry
+ * @param {Object} updates - Fields to update
+ * @returns {Object} Complete update payload with updatedAt
+ */
+export function prepareUpdate(entry, updates) {
+  return {
+    id: entry.id,
+    ...updates,
+    updatedAt: Date.now()
+  };
 }
 
 export default lexiconReducer;

@@ -45,25 +45,14 @@ describe('lexiconReducer', () => {
       expect(result[0].phonetic).toBe('/haʊs/');
     });
 
-    it('should assign unique ID', () => {
-      const entryData = { word: 'house' };
-      const action = { type: ACTIONS.CREATE_ENTRY, payload: entryData };
+    it('should accept pre-created entry with ID and timestamps', () => {
+      const entryData = { word: 'house', phonetic: '/haʊs/' };
+      const entry = createEntry(entryData);
+      const action = { type: ACTIONS.CREATE_ENTRY, payload: entry };
       const result = lexiconReducer(initialState, action);
       expect(result[0].id).toBeDefined();
       expect(typeof result[0].id).toBe('string');
-    });
-
-    it('should set default learningStatus to Nueva', () => {
-      const entryData = { word: 'house' };
-      const action = { type: ACTIONS.CREATE_ENTRY, payload: entryData };
-      const result = lexiconReducer(initialState, action);
       expect(result[0].learningStatus).toBe(LEARNING_STATUS.NEW);
-    });
-
-    it('should set timestamps', () => {
-      const entryData = { word: 'house' };
-      const action = { type: ACTIONS.CREATE_ENTRY, payload: entryData };
-      const result = lexiconReducer(initialState, action);
       expect(result[0].createdAt).toBeDefined();
       expect(result[0].updatedAt).toBeDefined();
       expect(typeof result[0].createdAt).toBe('number');
@@ -96,16 +85,20 @@ describe('lexiconReducer', () => {
   });
 
   describe('UPDATE_ENTRY', () => {
-    it('should update entry by ID', () => {
-      const entry = { id: '1', word: 'house', notes: '' };
+    it('should update entry by ID with pre-prepared timestamp', () => {
+      const createdAt = Date.now();
+      const entry = { id: '1', word: 'house', notes: '', createdAt };
       initialState = [entry];
       
-      const updates = { id: '1', notes: 'Important word' };
+      // Use a timestamp slightly after createdAt to ensure it's greater
+      const updatedAt = createdAt + 1;
+      const updates = { id: '1', notes: 'Important word', updatedAt };
       const action = { type: ACTIONS.UPDATE_ENTRY, payload: updates };
       const result = lexiconReducer(initialState, action);
       
       expect(result[0].notes).toBe('Important word');
-      expect(result[0].updatedAt).toBeGreaterThan(entry.createdAt || 0);
+      expect(result[0].updatedAt).toBe(updates.updatedAt);
+      expect(result[0].updatedAt).toBeGreaterThan(entry.createdAt);
     });
 
     it('should update learningStatus', () => {

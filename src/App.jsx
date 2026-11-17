@@ -10,7 +10,7 @@ import LexiconList from './components/LexiconList';
 import EntryEditor from './components/EntryEditor';
 import Preferences from './components/Preferences';
 import StatusMessage from './components/StatusMessage';
-import { lexiconReducer, ACTIONS, LEARNING_STATUS, createEntry } from './reducers/lexiconReducer';
+import { lexiconReducer, ACTIONS, LEARNING_STATUS, createEntry, prepareUpdate } from './reducers/lexiconReducer';
 import { loadEntries, saveEntries } from './hooks/useLocalStorage';
 import { SEARCH_STATUS } from './hooks/useDictionary';
 
@@ -65,14 +65,17 @@ export function App() {
       return;
     }
 
-    // Pass raw data to reducer - it will create the entry
-    dispatch({ type: ACTIONS.CREATE_ENTRY, payload: {
+    // Create complete entry with ID and timestamps BEFORE dispatch
+    // Reducer remains pure - only validates and inserts
+    const newEntry = createEntry({
       word: dictionaryResult.word,
       phonetic: dictionaryResult.phonetic,
       partOfSpeech: dictionaryResult.partOfSpeech || (dictionaryResult.meanings?.[0]?.partOfSpeech || ''),
       definition: dictionaryResult.definitions?.[0] || '',
       sourceUrl: dictionaryResult.sourceUrls?.[0] || ''
-    } });
+    });
+    
+    dispatch({ type: ACTIONS.CREATE_ENTRY, payload: newEntry });
     setStatusMessage({ 
       message: `${dictionaryResult.word} añadida a Mi Léxico`,
       type: 'success'
@@ -86,13 +89,20 @@ export function App() {
 
   // Handle save edited entry
   const handleSaveEditedEntry = useCallback((updatedEntry) => {
-    dispatch({ type: ACTIONS.UPDATE_ENTRY, payload: updatedEntry });
-    setEditingEntry(null);
-    setStatusMessage({ 
-      message: `${updatedEntry.word} actualizada`,
-      type: 'success'
-    });
-  }, []);
+    // Find original entry to get current state
+    const originalEntry = entries.find(e => e.id === updatedEntry.id);
+    if (originalEntry) {
+      // Prepare update with new timestamp BEFORE dispatch
+      // Reducer remains pure - only performs immutable update
+      const updatePayload = prepareUpdate(originalEntry, updatedEntry);
+      dispatch({ type: ACTIONS.UPDATE_ENTRY, payload: updatePayload });
+      setEditingEntry(null);
+      setStatusMessage({ 
+        message: `${updatedEntry.word} actualizada`,
+        type: 'success'
+      });
+    }
+  }, [entries]);
 
   // Handle delete entry
   const handleDeleteEntry = useCallback((entryId) => {

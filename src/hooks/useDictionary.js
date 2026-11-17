@@ -5,6 +5,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { fetchDictionary } from '../services/dictionaryApi';
 import { useDebounce } from './useDebounce';
+import { validateWord } from '../utils/validation';
 
 /**
  * Search status constants
@@ -41,6 +42,15 @@ export function useDictionary(debounceDelay = 450) {
     // Create new AbortController
     const controller = new AbortController();
     abortControllerRef.current = controller;
+
+    // Validate query before search
+    const validation = validateWord(searchQuery);
+    if (!validation.isValid) {
+      setStatus(SEARCH_STATUS.ERROR);
+      setError(validation.error || 'Invalid word');
+      setResult(null);
+      return;
+    }
 
     if (!searchQuery || searchQuery.trim() === '') {
       setStatus(SEARCH_STATUS.IDLE);

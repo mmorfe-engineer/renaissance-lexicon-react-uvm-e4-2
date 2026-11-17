@@ -171,6 +171,16 @@ p {
   margin: 0 0 var(--spacing-md) 0;
 }
 
+/* Reading content uses the selected typography */
+.result-word,
+.card-word,
+.card-definition,
+.definition,
+.example,
+.card-notes {
+  font-family: var(--font-reading);
+}
+
 a {
   color: var(--color-primary);
   text-decoration: none;
