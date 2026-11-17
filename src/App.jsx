@@ -2,7 +2,13 @@
  * App component
  * Main application component
  */
-import { useState, useReducer, useEffect, useCallback } from 'react';
+import {
+  useState,
+  useReducer,
+  useEffect,
+  useCallback,
+  useRef
+} from 'react';
 import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import DictionaryResult from './components/DictionaryResult';
@@ -10,15 +16,18 @@ import LexiconList from './components/LexiconList';
 import EntryEditor from './components/EntryEditor';
 import Preferences from './components/Preferences';
 import StatusMessage from './components/StatusMessage';
-import { lexiconReducer, ACTIONS, LEARNING_STATUS, createEntry, prepareUpdate } from './reducers/lexiconReducer';
+import {
+  lexiconReducer,
+  ACTIONS,
+  createEntry,
+  prepareUpdate
+} from './reducers/lexiconReducer';
 import { loadEntries, saveEntries } from './hooks/useLocalStorage';
 import { SEARCH_STATUS } from './hooks/useDictionary';
 
 export function App() {
-  // State for lexicon entries (useReducer)
   const [entries, dispatch] = useReducer(lexiconReducer, []);
 
-  // State for dictionary search
   const [searchState, setSearchState] = useState({
     query: '',
     status: SEARCH_STATUS.IDLE,
@@ -26,13 +35,12 @@ export function App() {
     error: null
   });
 
-  // State for editor
   const [editingEntry, setEditingEntry] = useState(null);
-
-  // State for status messages
   const [statusMessage, setStatusMessage] = useState(null);
 
-  // Load entries from localStorage on mount
+  const editTriggerRef = useRef(null);
+  const lexiconHeadingRef = useRef(null);
+
   useEffect(() => {
     const savedEntries = loadEntries();
     if (savedEntries && savedEntries.length > 0) {
@@ -40,123 +48,131 @@ export function App() {
     }
   }, []);
 
-  // Save entries to localStorage whenever they change (including empty array)
   useEffect(() => {
     saveEntries(entries);
   }, [entries]);
 
-  // Handle dictionary search completion
   const handleSearchComplete = useCallback((result) => {
-    setSearchState(prev => ({ ...prev, result, status: SEARCH_STATUS.SUCCESS, error: null }));
+    setSearchState((previous) => ({
+      ...previous,
+      result,
+      status: SEARCH_STATUS.SUCCESS,
+      error: null
+    }));
   }, []);
 
-  // Handle save to lexicon
   const handleSaveToLexicon = useCallback((dictionaryResult) => {
-    // Check if already exists (basic check by word only)
-    const exists = entries.some(entry =>
-      entry.word?.toLowerCase() === dictionaryResult.word?.toLowerCase()
+    const exists = entries.some(
+      (entry) =>
+        entry.word?.toLowerCase() === dictionaryResult.word?.toLowerCase()
     );
 
     if (exists) {
-      setStatusMessage({ 
+      setStatusMessage({
         message: `${dictionaryResult.word} ya está en Mi Léxico`,
         type: 'warning'
       });
       return;
     }
 
-    // Create complete entry with ID and timestamps BEFORE dispatch
-    // Reducer remains pure - only validates and inserts
     const newEntry = createEntry({
       word: dictionaryResult.word,
       phonetic: dictionaryResult.phonetic,
-      partOfSpeech: dictionaryResult.partOfSpeech || (dictionaryResult.meanings?.[0]?.partOfSpeech || ''),
+      partOfSpeech:
+        dictionaryResult.partOfSpeech ||
+        dictionaryResult.meanings?.[0]?.partOfSpeech ||
+        '',
       definition: dictionaryResult.definitions?.[0] || '',
       sourceUrl: dictionaryResult.sourceUrls?.[0] || ''
     });
-    
+
     dispatch({ type: ACTIONS.CREATE_ENTRY, payload: newEntry });
-    setStatusMessage({ 
+    setStatusMessage({
       message: `${dictionaryResult.word} añadida a Mi Léxico`,
       type: 'success'
     });
   }, [entries]);
 
-  // Handle edit entry
-  const handleEditEntry = useCallback((entry) => {
+  const restoreEditFocus = useCallback(() => {
+    const target = editTriggerRef.current;
+    requestAnimationFrame(() => {
+      if (target?.isConnected) target.focus();
+    });
+  }, []);
+
+  const handleEditEntry = useCallback((entry, triggerElement) => {
+    editTriggerRef.current = triggerElement || null;
     setEditingEntry(entry);
   }, []);
 
-  // Handle save edited entry
+  const handleCancelEdit = useCallback(() => {
+    setEditingEntry(null);
+    restoreEditFocus();
+  }, [restoreEditFocus]);
+
   const handleSaveEditedEntry = useCallback((updatedEntry) => {
-    // Find original entry to get current state
-    const originalEntry = entries.find(e => e.id === updatedEntry.id);
-    if (originalEntry) {
-      // Prepare update with new timestamp BEFORE dispatch
-      // Reducer remains pure - only performs immutable update
-      const updatePayload = prepareUpdate(originalEntry, updatedEntry);
-      dispatch({ type: ACTIONS.UPDATE_ENTRY, payload: updatePayload });
-      setEditingEntry(null);
-      setStatusMessage({ 
-        message: `${updatedEntry.word} actualizada`,
-        type: 'success'
-      });
-    }
-  }, [entries]);
+    const originalEntry = entries.find(
+      (entry) => entry.id === updatedEntry.id
+    );
 
-  // Handle delete entry
-  const handleDeleteEntry = useCallback((entryId) => {
-    const entryToDelete = entries.find(e => e.id === entryId);
-    if (entryToDelete) {
-      // Simple confirmation - just delete
-      dispatch({ type: ACTIONS.DELETE_ENTRY, payload: entryId });
-      setStatusMessage({ 
-        message: `${entryToDelete.word} eliminada de Mi Léxico`,
-        type: 'success'
-      });
-    }
-  }, [entries]);
+    if (!originalEntry) return;
 
-  // Clear search
-  const clearSearch = useCallback(() => {
-    setSearchState({
-      query: '',
-      status: SEARCH_STATUS.IDLE,
-      result: null,
-      error: null
+    const updatePayload = prepareUpdate(originalEntry, updatedEntry);
+    dispatch({ type: ACTIONS.UPDATE_ENTRY, payload: updatePayload });
+    setEditingEntry(null);
+    setStatusMessage({
+      message: `${updatedEntry.word} actualizada`,
+      type: 'success'
     });
-  }, []);
+    restoreEditFocus();
+  }, [entries, restoreEditFocus]);
+
+  const handleDeleteEntry = useCallback((entryId) => {
+    const entryToDelete = entries.find((entry) => entry.id === entryId);
+    if (!entryToDelete) return;
+
+    dispatch({ type: ACTIONS.DELETE_ENTRY, payload: entryId });
+    setStatusMessage({
+      message: `${entryToDelete.word} eliminada de Mi Léxico`,
+      type: 'success'
+    });
+
+    requestAnimationFrame(() => {
+      lexiconHeadingRef.current?.focus();
+    });
+  }, [entries]);
 
   return (
     <div className="app">
       <Header />
       <Preferences />
-      
+
       <main className="main-content">
         <section className="search-section">
           <SearchForm onSearchComplete={handleSearchComplete} />
-          
+
           {statusMessage && (
-            <StatusMessage 
-              message={statusMessage.message} 
+            <StatusMessage
+              message={statusMessage.message}
               type={statusMessage.type}
               onDismiss={() => setStatusMessage(null)}
             />
           )}
-          
+
           {searchState.result && (
-            <DictionaryResult 
-              result={searchState.result} 
+            <DictionaryResult
+              result={searchState.result}
               onSave={handleSaveToLexicon}
             />
           )}
         </section>
 
         <section className="lexicon-section">
-          <LexiconList 
-            entries={entries} 
+          <LexiconList
+            entries={entries}
             onEdit={handleEditEntry}
             onDelete={handleDeleteEntry}
+            headingRef={lexiconHeadingRef}
           />
         </section>
       </main>
@@ -165,7 +181,7 @@ export function App() {
         <EntryEditor
           entry={editingEntry}
           onSave={handleSaveEditedEntry}
-          onCancel={() => setEditingEntry(null)}
+          onCancel={handleCancelEdit}
         />
       )}
     </div>
