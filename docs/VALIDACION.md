@@ -71,7 +71,7 @@ Secuencia obligatoria para validar el nucleo funcional.
 - [x] Reducer no usa Math.random()
 - [x] createEntry llamada fuera del reducer
 - [x] prepareUpdate llamada fuera del reducer
-- [x] Tests pasan con esta arquitectura (68 tests passed)
+- [x] Tests pasan con esta arquitectura (93 tests passed)
 
 ---
 
@@ -270,7 +270,7 @@ found 0 vulnerabilities
 - Reducer puro (sin efectos secundarios)
 - DELETE seguro con confirmacion
 - Responsive verificado en 3 viewports
-- 68 tests unitarios passed
+- 93 tests unitarios passed
 - Build exitoso
 - npm ci reproducible
 - Repositorio 4.1 intacto
