@@ -3,7 +3,7 @@
 **Proyecto:** Renaissance Lexicon · React Edition
 **E-Actividad:** 4.2
 **Fecha de ejecucion:** 16/11/2026
-**Hora:** 20:47 UTC
+**Hora:** 09:07 UTC
 
 ---
 
@@ -78,18 +78,24 @@ Secuencia obligatoria para validar el nucleo funcional.
 ## Resultados de Pruebas Unitarias
 
 **Comando:** `npm test`
-**Fecha:** 16/11/2026 20:47 UTC
-**Duracion:** 1.26s
+**Fecha:** 16/11/2026 09:07 UTC
+**Duracion:** 2.57s
 
 | Suite | Tests | Passed | Failed |
 |-------|-------|--------|--------|
-| validation.test.js | 32 | 32 | 0 |
-| dictionaryApi.test.js | 11 | 11 | 0 |
 | lexiconReducer.test.js | 17 | 17 | 0 |
+| dictionaryApi.test.js | 11 | 11 | 0 |
+| validation.test.js | 32 | 32 | 0 |
 | useDebounce.test.js | 8 | 8 | 0 |
-| **Total** | **68** | **68** | **0** |
+| useDictionary.test.js | 13 | 13 | 0 |
+| **Total** | **81** | **81** | **0** |
 
-**Coverage:** No ejecutado (no configurado en este proyecto)
+**Coverage:** No ejecutado.
+
+**Nota sobre validacion y debounce:**
+- `useDictionary.test.js` acredita que una entrada invalida NO alcanza fetch (incluyendo ruta de debounce)
+- `useDebounce.test.js` acredita el comportamiento temporal del debounce (450ms)
+- Ambas suites ejecutadas y verificadas
 
 ---
 
@@ -97,7 +103,7 @@ Secuencia obligatoria para validar el nucleo funcional.
 
 **Comando:** `npm run build`
 **Resultado:** EXITOSO
-**Duracion:** 279ms
+**Duracion:** 222ms
 
 ```
 vite v8.3.8 building client environment for production...
