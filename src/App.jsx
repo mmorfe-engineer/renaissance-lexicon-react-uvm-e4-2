@@ -8,6 +8,7 @@ import SearchForm from './components/SearchForm';
 import DictionaryResult from './components/DictionaryResult';
 import LexiconList from './components/LexiconList';
 import EntryEditor from './components/EntryEditor';
+import Preferences from './components/Preferences';
 import StatusMessage from './components/StatusMessage';
 import { lexiconReducer, ACTIONS, LEARNING_STATUS, createEntry } from './reducers/lexiconReducer';
 import { loadEntries, saveEntries } from './hooks/useLocalStorage';
@@ -39,11 +40,9 @@ export function App() {
     }
   }, []);
 
-  // Save entries to localStorage whenever they change
+  // Save entries to localStorage whenever they change (including empty array)
   useEffect(() => {
-    if (entries.length > 0) {
-      saveEntries(entries);
-    }
+    saveEntries(entries);
   }, [entries]);
 
   // Handle dictionary search completion
@@ -53,7 +52,7 @@ export function App() {
 
   // Handle save to lexicon
   const handleSaveToLexicon = useCallback((dictionaryResult) => {
-    // Check if already exists
+    // Check if already exists (basic check by word only)
     const exists = entries.some(entry =>
       entry.word?.toLowerCase() === dictionaryResult.word?.toLowerCase()
     );
@@ -66,17 +65,14 @@ export function App() {
       return;
     }
 
-    const newEntry = createEntry({
+    // Pass raw data to reducer - it will create the entry
+    dispatch({ type: ACTIONS.CREATE_ENTRY, payload: {
       word: dictionaryResult.word,
       phonetic: dictionaryResult.phonetic,
       partOfSpeech: dictionaryResult.partOfSpeech || (dictionaryResult.meanings?.[0]?.partOfSpeech || ''),
       definition: dictionaryResult.definitions?.[0] || '',
-      sourceUrl: dictionaryResult.sourceUrls?.[0] || '',
-      notes: '',
-      learningStatus: LEARNING_STATUS.NEW
-    });
-
-    dispatch({ type: ACTIONS.CREATE_ENTRY, payload: newEntry });
+      sourceUrl: dictionaryResult.sourceUrls?.[0] || ''
+    } });
     setStatusMessage({ 
       message: `${dictionaryResult.word} añadida a Mi Léxico`,
       type: 'success'
@@ -124,6 +120,7 @@ export function App() {
   return (
     <div className="app">
       <Header />
+      <Preferences />
       
       <main className="main-content">
         <section className="search-section">

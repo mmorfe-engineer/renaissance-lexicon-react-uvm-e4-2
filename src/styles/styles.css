@@ -1,6 +1,44 @@
 /* Renaissance Lexicon - React Edition */
 /* Base Reset and Variables */
 
+@font-face {
+  font-family: 'Lexicon Editorial';
+  src: url('/renaissance-lexicon-react-uvm-e4-2/assets/fonts/NotoSerif-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lexicon Classic';
+  src: url('/renaissance-lexicon-react-uvm-e4-2/assets/fonts/LiberationSerif-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lexicon Sans';
+  src: url('/renaissance-lexicon-react-uvm-e4-2/assets/fonts/NotoSans-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lexicon Humanist';
+  src: url('/renaissance-lexicon-react-uvm-e4-2/assets/fonts/DejaVuSans.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lexicon Mono';
+  src: url('/renaissance-lexicon-react-uvm-e4-2/assets/fonts/DejaVuSansMono.ttf') format('truetype');
+  font-display: swap;
+}
+
+html {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 :root {
   /* Colors */
   --color-primary: #1e40af;
@@ -33,6 +71,13 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
   --font-mono: 'Fira Code', 'Courier New', monospace;
+  
+  /* Renaissance Lexicon fonts */
+  --font-reading: 'Lexicon Editorial', var(--font-serif);
+  --font-classic: 'Lexicon Classic', var(--font-serif);
+  --font-sans-custom: 'Lexicon Sans', var(--font-sans);
+  --font-humanist: 'Lexicon Humanist', var(--font-sans);
+  --font-mono-custom: 'Lexicon Mono', var(--font-mono);
   
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -83,6 +128,26 @@ body {
   line-height: 1.6;
 }
 
+body[data-font="editorial"] {
+  --font-reading: 'Lexicon Editorial', var(--font-serif);
+}
+
+body[data-font="classic"] {
+  --font-reading: 'Lexicon Classic', var(--font-serif);
+}
+
+body[data-font="sans"] {
+  --font-reading: 'Lexicon Sans', var(--font-sans);
+}
+
+body[data-font="humanist"] {
+  --font-reading: 'Lexicon Humanist', var(--font-sans);
+}
+
+body[data-font="mono"] {
+  --font-reading: 'Lexicon Mono', var(--font-mono);
+}
+
 #root {
   min-height: 100vh;
   display: flex;
@@ -91,7 +156,7 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif);
+  font-family: var(--font-reading);
   line-height: 1.2;
   margin: 0 0 var(--spacing-sm) 0;
   color: var(--color-primary);
@@ -473,6 +538,15 @@ a:hover {
 
 .delete-button:hover {
   background-color: rgba(239, 68, 68, 0.2);
+}
+
+.delete-button.delete-confirm {
+  background-color: rgba(239, 68, 68, 0.2);
+  font-weight: 700;
+}
+
+.delete-button.delete-confirm:hover {
+  background-color: rgba(239, 68, 68, 0.4);
 }
 
 /* Pronunciation Control */

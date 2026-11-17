@@ -1,8 +1,8 @@
 /**
  * SearchForm component
- * Controlled input for dictionary search
+ * Controlled input for dictionary search with validation
  */
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useDictionary, SEARCH_STATUS } from '../hooks/useDictionary';
 import { validateWord } from '../utils/validation';
 
@@ -14,11 +14,11 @@ export function SearchForm({ onSearchComplete }) {
     result, 
     error,
     search,
-    handleSubmit,
     clear 
   } = useDictionary();
 
   const inputRef = useRef(null);
+  const [validationError, setValidationError] = useState(null);
 
   // Focus input on mount
   useEffect(() => {
@@ -34,8 +34,23 @@ export function SearchForm({ onSearchComplete }) {
     }
   }, [status, result, onSearchComplete]);
 
+  // Clear validation error when query changes
+  useEffect(() => {
+    if (query.trim() === '') {
+      setValidationError(null);
+    }
+  }, [query]);
+
   const handleChange = (e) => {
     setQuery(e.target.value);
+    // Validate on change
+    const trimmed = e.target.value.trim();
+    if (trimmed) {
+      const validation = validateWord(trimmed);
+      setValidationError(validation.isValid ? null : validation.error);
+    } else {
+      setValidationError(null);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -45,8 +60,28 @@ export function SearchForm({ onSearchComplete }) {
     }
   };
 
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+    
+    const trimmedQuery = query.trim();
+    
+    // Validate before search
+    if (!trimmedQuery) {
+      return;
+    }
+    
+    const validation = validateWord(trimmedQuery);
+    if (!validation.isValid) {
+      setValidationError(validation.error);
+      return;
+    }
+    
+    setValidationError(null);
+    search(trimmedQuery);
+  };
+
   const isLoading = status === SEARCH_STATUS.LOADING;
-  const hasError = status === SEARCH_STATUS.ERROR || status === SEARCH_STATUS.NOT_FOUND;
+  const hasApiError = status === SEARCH_STATUS.ERROR || status === SEARCH_STATUS.NOT_FOUND;
 
   return (
     <form onSubmit={handleSubmit} className="search-form">
@@ -64,21 +99,28 @@ export function SearchForm({ onSearchComplete }) {
           placeholder="Buscar palabra (ej: house)"
           aria-label="Buscar palabra"
           aria-busy={isLoading}
+          aria-invalid={!!validationError}
+          aria-describedby={validationError ? 'validation-error' : undefined}
           disabled={isLoading}
           className="search-input"
         />
         <button
           type="submit"
-          disabled={isLoading || !query.trim()}
+          disabled={isLoading || !query.trim() || !!validationError}
           className="search-button"
           aria-label="Buscar"
         >
           {isLoading ? 'Buscando...' : 'Buscar'}
         </button>
       </div>
-      {hasError && (
+      {hasApiError && (
         <p className="search-error" role="alert">
           {error === 'Word not found' ? 'Palabra no encontrada' : error}
+        </p>
+      )}
+      {validationError && (
+        <p className="search-error" id="validation-error" role="alert">
+          {validationError}
         </p>
       )}
     </form>

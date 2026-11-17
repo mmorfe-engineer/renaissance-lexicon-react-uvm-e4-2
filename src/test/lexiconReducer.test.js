@@ -176,6 +176,14 @@ describe('lexiconReducer', () => {
       const result = lexiconReducer(initialState, action);
       expect(result).toEqual([]);
     });
+
+    it('should return empty array when deleting last entry', () => {
+      const entries = [{ id: '1', word: 'house' }];
+      const action = { type: ACTIONS.DELETE_ENTRY, payload: '1' };
+      const result = lexiconReducer(entries, action);
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
+    });
   });
 
   describe('createEntry', () => {

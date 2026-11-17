@@ -2,9 +2,12 @@
  * LexiconCard component
  * Displays a single lexicon entry
  */
+import { useState } from 'react';
 import { LEARNING_STATUS } from '../reducers/lexiconReducer';
 
 export function LexiconCard({ entry, onEdit, onDelete }) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
   const statusLabels = {
     [LEARNING_STATUS.NEW]: 'Nueva',
     [LEARNING_STATUS.LEARNING]: 'Aprendiendo',
@@ -19,9 +22,20 @@ export function LexiconCard({ entry, onEdit, onDelete }) {
 
   const handleDelete = (e) => {
     e.stopPropagation();
+    setConfirmingDelete(true);
+  };
+
+  const handleConfirmDelete = (e) => {
+    e.stopPropagation();
     if (onDelete) {
       onDelete(entry.id);
     }
+    setConfirmingDelete(false);
+  };
+
+  const handleCancelDelete = (e) => {
+    e.stopPropagation();
+    setConfirmingDelete(false);
   };
 
   const handleEdit = (e) => {
@@ -62,20 +76,41 @@ export function LexiconCard({ entry, onEdit, onDelete }) {
       </div>
 
       <footer className="card-footer">
-        <button 
-          onClick={handleEdit}
-          className="edit-button"
-          aria-label={`Editar ${entry.word}`}
-        >
-          Editar
-        </button>
-        <button 
-          onClick={handleDelete}
-          className="delete-button"
-          aria-label={`Eliminar ${entry.word}`}
-        >
-          Eliminar
-        </button>
+        {confirmingDelete ? (
+          <>
+            <button 
+              onClick={handleCancelDelete}
+              className="edit-button"
+              aria-label={`Cancelar eliminaci\u00f3n de ${entry.word}`}
+            >
+              Cancelar
+            </button>
+            <button 
+              onClick={handleConfirmDelete}
+              className="delete-button delete-confirm"
+              aria-label={`Eliminar definitivamente ${entry.word}`}
+            >
+              Eliminar definitivamente
+            </button>
+          </>
+        ) : (
+          <>
+            <button 
+              onClick={handleEdit}
+              className="edit-button"
+              aria-label={`Editar ${entry.word}`}
+            >
+              Editar
+            </button>
+            <button 
+              onClick={handleDelete}
+              className="delete-button"
+              aria-label={`Eliminar ${entry.word}`}
+            >
+              Eliminar
+            </button>
+          </>
+        )}
       </footer>
     </article>
   );
