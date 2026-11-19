@@ -1,66 +1,45 @@
-/**
- * PronunciationControl component
- * Audio playback for pronunciation
- */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export function PronunciationControl({ audioUrls }) {
+export function PronunciationControl({ word, audioUrls = [] }) {
   const audioRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
 
-  if (!audioUrls || audioUrls.length === 0) {
-    return null;
+  async function play() {
+    const audio = audioRef.current;
+    setBusy(true);
+    setMessage('');
+    for (let offset = 0; offset < audioUrls.length; offset++) {
+      const index = (selected + offset) % audioUrls.length;
+      audio.src = audioUrls[index];
+      try {
+        await audio.play();
+        setSelected(index);
+        setBusy(false);
+        return;
+      } catch (error) {
+        if (error.name === 'NotAllowedError') {
+          setMessage('El navegador bloqueó el audio. Pulsa Escuchar para reintentar.');
+          setBusy(false);
+          return;
+        }
+      }
+    }
+    setMessage('No se pudo reproducir ninguna pronunciación. Inténtalo de nuevo más tarde.');
+    setBusy(false);
   }
 
-  const handlePlay = async (url) => {
-    if (!audioRef.current) return;
-
-    try {
-      // Ensure audio element exists
-      if (!audioRef.current) {
-        audioRef.current = new Audio(url);
-      } else {
-        audioRef.current.src = url;
-      }
-
-      // Set up event listeners
-      audioRef.current.onended = () => setIsPlaying(false);
-      audioRef.current.onerror = () => {
-        setIsPlaying(false);
-        setError('Error al cargar el audio');
-      };
-
-      await audioRef.current.play();
-      setIsPlaying(true);
-      setError(null);
-    } catch (err) {
-      setIsPlaying(false);
-      setError(err.message || 'Error al reproducir');
-    }
-  };
-
-  return (
-    <div className="pronunciation-control" role="region" aria-label="Pronunciación">
-      <button
-        onClick={() => handlePlay(audioUrls[0])}
-        disabled={isPlaying}
-        className="play-button"
-        aria-label="Reproducir pronunciación"
-        aria-busy={isPlaying}
-      >
-        {isPlaying ? '▮▮' : '▶'}
-      </button>
-      
-      {error && (
-        <span className="audio-error" role="alert">
-          {error}
-        </span>
-      )}
-      
-      <audio ref={audioRef} hidden />
-    </div>
-  );
+  if (!audioUrls.length) return <p className="audio-note">Sin audio disponible</p>;
+  return <div className="audio-control" role="group" aria-label={`Pronunciaciones de ${word}`}>
+    {audioUrls.length > 1 && <><label htmlFor={`audio-${word}`}>Pronunciación</label>
+      <select id={`audio-${word}`} value={selected} onChange={e => setSelected(Number(e.target.value))}>
+        {audioUrls.map((url, i) => <option key={url} value={i}>Pronunciación {i + 1}</option>)}
+      </select></>}
+    <button type="button" className="audio-button" onClick={play} disabled={busy}>▶ Escuchar</button>
+    <audio ref={audioRef} hidden preload="none" onError={() => {}} />
+    {message && <p className="audio-message" role="status">{message}</p>}
+  </div>;
 }
-
 export default PronunciationControl;

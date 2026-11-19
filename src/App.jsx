@@ -1,6 +1,6 @@
 /**
  * App component
- * Main application component
+ * Main application component with ported 4.1 visual design
  */
 import {
   useState,
@@ -12,6 +12,9 @@ import {
 import Header from './components/Header';
 import SearchForm from './components/SearchForm';
 import DictionaryResult from './components/DictionaryResult';
+import InitialState from './components/InitialState';
+import LoadingState from './components/LoadingState';
+import ErrorState from './components/ErrorState';
 import LexiconList from './components/LexiconList';
 import EntryEditor from './components/EntryEditor';
 import Preferences from './components/Preferences';
@@ -23,17 +26,13 @@ import {
   prepareUpdate
 } from './reducers/lexiconReducer';
 import { loadEntries, saveEntries } from './hooks/useLocalStorage';
-import { SEARCH_STATUS } from './hooks/useDictionary';
+import { useDictionary, SEARCH_STATUS } from './hooks/useDictionary';
 
 export function App() {
-  const [entries, dispatch] = useReducer(lexiconReducer, []);
-
-  const [searchState, setSearchState] = useState({
-    query: '',
-    status: SEARCH_STATUS.IDLE,
-    result: null,
-    error: null
-  });
+  const [entries, dispatch] = useReducer(lexiconReducer, undefined, loadEntries);
+  const dictionary = useDictionary();
+  const { query, setQuery, status, result, error, search } = dictionary;
+  const searchState = { query, status, result, error };
 
   const [editingEntry, setEditingEntry] = useState(null);
   const [statusMessage, setStatusMessage] = useState(null);
@@ -41,25 +40,12 @@ export function App() {
   const editTriggerRef = useRef(null);
   const lexiconHeadingRef = useRef(null);
 
-  useEffect(() => {
-    const savedEntries = loadEntries();
-    if (savedEntries && savedEntries.length > 0) {
-      dispatch({ type: ACTIONS.HYDRATE_ENTRIES, payload: savedEntries });
-    }
-  }, []);
+  useEffect(() => { saveEntries(entries); }, [entries]);
 
-  useEffect(() => {
-    saveEntries(entries);
-  }, [entries]);
-
-  const handleSearchComplete = useCallback((result) => {
-    setSearchState((previous) => ({
-      ...previous,
-      result,
-      status: SEARCH_STATUS.SUCCESS,
-      error: null
-    }));
-  }, []);
+  const searchWord = useCallback((word) => {
+    setQuery(word);
+    search(word);
+  }, [setQuery, search]);
 
   const handleSaveToLexicon = useCallback((dictionaryResult) => {
     const exists = entries.some(
@@ -82,7 +68,8 @@ export function App() {
         dictionaryResult.partOfSpeech ||
         dictionaryResult.meanings?.[0]?.partOfSpeech ||
         '',
-      definition: dictionaryResult.definitions?.[0] || '',
+      definition: dictionaryResult.definitions?.[0] ||
+                   dictionaryResult.meanings?.[0]?.definitions?.[0]?.definition || '',
       sourceUrl: dictionaryResult.sourceUrls?.[0] || ''
     });
 
@@ -142,14 +129,51 @@ export function App() {
     });
   }, [entries]);
 
+  const handleRetry = useCallback(() => search(query), [search, query]);
+
+  // Check if we should show initial state
+  const showInitialState = searchState.status === SEARCH_STATUS.IDLE &&
+                            (searchState.query === '' || searchState.query.trim() === '') &&
+                            !searchState.result &&
+                            !searchState.error;
+
+  // Check if we should show loading state
+  const showLoadingState = searchState.status === SEARCH_STATUS.LOADING;
+
+  // Check if we should show error state
+  const showErrorState = searchState.status === SEARCH_STATUS.ERROR ||
+                         searchState.status === SEARCH_STATUS.NOT_FOUND;
+
+  // Check if we should show result
+  const showResult = searchState.status === SEARCH_STATUS.SUCCESS && searchState.result;
+
   return (
     <div className="app">
       <Header />
-      <Preferences />
 
-      <main className="main-content">
-        <section className="search-section">
-          <SearchForm onSearchComplete={handleSearchComplete} />
+      <main id="main" className="wrap" tabIndex={-1}>
+        <section className="intro" aria-labelledby="page-title">
+          <p className="eyebrow">EL LENGUAJE ABRE POSIBILIDADES</p>
+          <h1 id="page-title">
+            Una palabra.<br />
+            <em>Un nuevo significado.</em>
+          </h1>
+          <p className="intro-copy">
+            Explora el inglés, definición a definición. Encuentra su significado,
+            descubre cómo suena y sigue aprendiendo.
+          </p>
+        </section>
+
+        <section className="dictionary" aria-label="Diccionario de inglés">
+          <div className="preferences">
+            <p className="section-label">
+              <span className="small-dot" aria-hidden="true"></span>
+              Tu espacio de lectura
+            </p>
+            <Preferences />
+          </div>
+
+          <SearchForm dictionary={dictionary} />
 
           {statusMessage && (
             <StatusMessage
@@ -159,23 +183,68 @@ export function App() {
             />
           )}
 
-          {searchState.result && (
+          {showInitialState && (
+            <InitialState onSuggestionClick={searchWord} />
+          )}
+
+          {showLoadingState && (
+            <LoadingState word={searchState.query} />
+          )}
+
+          {showErrorState && (
+            <ErrorState
+              kind={searchState.status === SEARCH_STATUS.NOT_FOUND ? 'not-found' : 'error'}
+              message={searchState.error || 'Ocurrió un error al buscar la palabra.'}
+              onRetry={handleRetry}
+            />
+          )}
+
+          {showResult && (
             <DictionaryResult
               result={searchState.result}
               onSave={handleSaveToLexicon}
+              onSearch={searchWord}
             />
           )}
+
+          <section className="lexicon-section">
+            <LexiconList
+              entries={entries}
+              onEdit={handleEditEntry}
+              onDelete={handleDeleteEntry}
+              headingRef={lexiconHeadingRef}
+            />
+          </section>
         </section>
 
-        <section className="lexicon-section">
-          <LexiconList
-            entries={entries}
-            onEdit={handleEditEntry}
-            onDelete={handleDeleteEntry}
-            headingRef={lexiconHeadingRef}
-          />
-        </section>
+        <aside className="reading-note">
+          <span aria-hidden="true">Aa</span>
+          <p>
+            Aprender empieza con curiosidad.<br />
+            <strong>Haz de cada palabra un descubrimiento.</strong>
+          </p>
+        </aside>
       </main>
+
+      <footer className="site-footer wrap">
+        <p>
+          <strong>Renaissance Lexicon</strong>
+          <br />
+          Universidad Valle del Momboy · FrontEndIVIVFI2026C
+        </p>
+        <div>
+          <a href="https://dictionaryapi.dev/" target="_blank" rel="noopener noreferrer">
+            Dictionary API ↗
+          </a>
+          <a
+            href="https://github.com/mmorfe-engineer/renaissance-lexicon-react-uvm-e4-2"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Código en GitHub ↗
+          </a>
+        </div>
+      </footer>
 
       {editingEntry && (
         <EntryEditor

@@ -38,6 +38,12 @@ Secuencia obligatoria para validar el nucleo funcional.
 
 ---
 
+## Consulta real y dependencia de audio
+
+En Chromium, la consulta real de `house` a Dictionary API respondió HTTP 200 y mostró vocabulario y definiciones. El proveedor suministró varias URLs de pronunciación; la aplicación intentó las alternativas disponibles, pero Chromium bloqueó los recursos con `ERR_BLOCKED_BY_ORB`. Al fallar todas, la interfaz mostró un mensaje estable en español. Dictionary API se mantiene como proveedor, sin sustitución artificial: el audio se clasifica como dependencia externa degradada o bloqueada, no como fallo fatal de la aplicación.
+
+---
+
 ## Prueba de Validacion en Debounce
 
 ### Objetivo: Validar que entrada invalida NO hace fetch incluso despues de debounce

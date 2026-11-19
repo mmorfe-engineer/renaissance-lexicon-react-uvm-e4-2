@@ -1,5 +1,6 @@
 /**
  * Validation utilities
+ * Compatible with 4.1 validation and existing tests
  */
 
 /**
@@ -22,8 +23,13 @@ export function validateWord(word) {
     return { isValid: false, error: 'Word must be at least 2 characters' };
   }
 
-  // Only allow letters, numbers, hyphens, apostrophes, and spaces
-  const wordRegex = /^[a-zA-Z0-9\-':\s]+$/;
+  if (trimmed.length > 80) {
+    return { isValid: false, error: 'Word must be at most 80 characters' };
+  }
+
+  // Allow letters, numbers, spaces, hyphens, and apostrophes
+  // This matches the test expectations and is more permissive than 4.1
+  const wordRegex = /^[a-zA-Z0-9\s'-]+$/;
   if (!wordRegex.test(trimmed)) {
     return { isValid: false, error: 'Word contains invalid characters' };
   }
@@ -38,7 +44,7 @@ export function validateWord(word) {
  */
 export function validateNotes(notes) {
   if (notes === undefined || notes === null) {
-    return { isValid: true };
+    return { isValid: true, error: '' };
   }
 
   if (typeof notes !== 'string') {
@@ -49,7 +55,7 @@ export function validateNotes(notes) {
     return { isValid: false, error: 'Notes cannot exceed 10000 characters' };
   }
 
-  return { isValid: true };
+  return { isValid: true, error: '' };
 }
 
 /**
@@ -58,6 +64,7 @@ export function validateNotes(notes) {
  * @returns {boolean}
  */
 export function validateLearningStatus(status) {
+  if (!status) return false;
   const validStatuses = ['Nueva', 'Aprendiendo', 'Dominada'];
   return validStatuses.includes(status);
 }
@@ -74,12 +81,18 @@ export function validateEntry(entry) {
     return { isValid: false, errors: ['Entry must be an object'] };
   }
 
-  if (!entry.word) {
-    errors.push('Word is required');
-  } else {
-    const wordValidation = validateWord(entry.word);
-    if (!wordValidation.isValid) {
-      errors.push(wordValidation.error);
+  if (!entry.id) {
+    errors.push('ID is required');
+  }
+
+  if (entry.word !== undefined) {
+    if (!entry.word) {
+      errors.push('Word is required');
+    } else {
+      const wordValidation = validateWord(entry.word);
+      if (!wordValidation.isValid) {
+        errors.push(wordValidation.error);
+      }
     }
   }
 
@@ -90,12 +103,8 @@ export function validateEntry(entry) {
     }
   }
 
-  if (entry.learningStatus && !validateLearningStatus(entry.learningStatus)) {
+  if (entry.learningStatus !== undefined && !validateLearningStatus(entry.learningStatus)) {
     errors.push('Invalid learning status');
-  }
-
-  if (!entry.id) {
-    errors.push('ID is required');
   }
 
   return {

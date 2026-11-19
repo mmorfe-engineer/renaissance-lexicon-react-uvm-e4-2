@@ -14,7 +14,7 @@ vi.mock('../services/dictionaryApi', () => ({
 
 // Mock useDebounce to control timing
 vi.mock('../hooks/useDebounce', () => ({
-  useDebounce: (value, delay) => value // For testing, no debounce
+  useDebounce: (value) => value // For testing, no debounce
 }));
 
 import { fetchDictionary } from '../services/dictionaryApi';

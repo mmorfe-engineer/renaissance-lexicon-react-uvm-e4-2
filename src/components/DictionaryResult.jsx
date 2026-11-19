@@ -1,119 +1,155 @@
 /**
  * DictionaryResult component
- * Displays Dictionary API results
+ * Displays Dictionary API results with 4.1 visual design
  */
-import { useState } from 'react';
 import PronunciationControl from './PronunciationControl';
 
-export function DictionaryResult({ result, onSave }) {
-  const [showFull, setShowFull] = useState(false);
+// Part of speech translations from 4.1
+const POS = {
+  noun: 'sustantivo',
+  verb: 'verbo',
+  adjective: 'adjetivo',
+  adverb: 'adverbio',
+  pronoun: 'pronombre',
+  preposition: 'preposición',
+  conjunction: 'conjunción',
+  interjection: 'interjección',
+  exclamation: 'exclamación',
+  determiner: 'determinante',
+  other: 'otra categoría'
+};
 
+export function DictionaryResult({ result, onSave, onSearch }) {
   if (!result || !result.word) {
     return null;
   }
 
-  const hasMultipleMeanings = result.meanings && result.meanings.length > 1;
-  const hasExamples = result.examples && result.examples.length > 0;
-  const hasSynonyms = result.synonyms && result.synonyms.length > 0;
+  // Normalize data to match 4.1 structure
+  const word = result.word || '';
 
-  const meaningsToShow = showFull ? result.meanings : result.meanings?.slice(0, 1);
+  // Get all phonetic texts
+  const allPhonetics = [];
+  if (result.phonetic) allPhonetics.push(result.phonetic);
+  if (result.phonetics) {
+    result.phonetics.forEach(p => {
+      if (p && !allPhonetics.includes(p)) {
+        allPhonetics.push(p);
+      }
+    });
+  }
+
+  const meanings = result.meanings || [];
+  const sourceUrls = result.sourceUrls || [];
+  const license = result.license || null;
 
   return (
-    <section className="dictionary-result" aria-labelledby="result-heading">
-      <h2 id="result-heading" className="result-word">
-        {result.word}
-      </h2>
-      
-      {result.phonetic && (
-        <p className="result-phonetic">
-          {result.phonetic}
-        </p>
-      )}
+    <div id="results" aria-busy="false">
+      {meanings.map((meaning, meaningIndex) => {
+        const partOfSpeech = meaning.partOfSpeech || 'other';
+        const posLabel = POS[partOfSpeech] || POS.other;
+        const partOfSpeechDisplay = `${partOfSpeech} · ${posLabel}`;
 
-      {result.audioUrls && result.audioUrls.length > 0 && (
-        <PronunciationControl audioUrls={result.audioUrls} />
-      )}
+        return (
+          <article key={meaningIndex} className="entry" aria-labelledby={`entry-${meaningIndex}`}>
+            <header className="entry-heading">
+              <div>
+                <h2 id={`entry-${meaningIndex}`} lang="en">{word}</h2>
+                {allPhonetics.length > 0 && (
+                  <p className="phonetic" lang={allPhonetics.length > 0 ? 'en' : 'es'}>
+                    {allPhonetics.join(' · ')}
+                  </p>
+                )}
+              </div>
 
-      {result.meanings && result.meanings.length > 0 && (
-        <div className="result-meanings">
-          {meaningsToShow?.map((meaning, index) => (
-            <div key={index} className="meaning">
-              {meaning.partOfSpeech && (
-                <p className="part-of-speech">{meaning.partOfSpeech}</p>
+              {result.phonetics && result.phonetics.length > 0 && (
+                <PronunciationControl
+                  word={word}
+                  phonetics={result.phonetics}
+                  audioUrls={result.audioUrls || []}
+                />
               )}
+            </header>
+
+            <section className="meaning">
+              <h3>
+                {partOfSpeechDisplay}
+              </h3>
               
-              {meaning.definitions && meaning.definitions.length > 0 && (
-                <ul className="definitions-list">
+              {meaning.definitions && meaning.definitions.length > 0 ? (
+                <ol className="definition-list" lang="en">
                   {meaning.definitions.map((def, defIndex) => (
-                    <li key={defIndex} className="definition">
-                      {def.definition}
+                    <li key={defIndex}>
+                      <p>{def.definition}</p>
                       {def.example && (
-                        <span className="example">
-                          <br />
-                          <em>Ejemplo: {def.example}</em>
-                        </span>
+                        <blockquote>{def.example}</blockquote>
                       )}
                     </li>
                   ))}
-                </ul>
+                </ol>
+              ) : (
+                <p className="audio-note">Sin definiciones disponibles en esta categoría.</p>
               )}
 
               {meaning.synonyms && meaning.synonyms.length > 0 && (
-                <p className="synonyms">
-                  <strong>Sinónimos:</strong> {meaning.synonyms.join(', ')}
-                </p>
+                <div className="synonyms">
+                  <span>Sinónimos</span>
+                  {meaning.synonyms.map((synonym, synIndex) => (
+                    <button
+                      key={synIndex}
+                      type="button"
+                      className="word-link"
+                      onClick={() => onSearch(synonym)}
+                      lang="en"
+                      aria-label={`Buscar ${synonym}`}
+                    >
+                      {synonym}
+                    </button>
+                  ))}
+                </div>
               )}
-            </div>
-          ))}
-        </div>
-      )}
+            </section>
+          </article>
+        );
+      })}
 
-      {hasMultipleMeanings && !showFull && (
-        <button 
-          onClick={() => setShowFull(true)}
-          className="show-more-button"
-        >
-          Mostrar más definiciones ({result.meanings.length})
-        </button>
-      )}
-
-      {hasExamples && !showFull && (
-        <div className="examples">
-          <strong>Ejemplos:</strong>
+      {sourceUrls.length > 0 && (
+        <section className="source-list">
+          <h3>Fuentes de esta entrada</h3>
           <ul>
-            {result.examples.slice(0, 2).map((example, index) => (
-              <li key={index}>{example}</li>
+            {sourceUrls.map((url, index) => (
+              <li key={index}>
+                <a href={url} target="_blank" rel="noopener noreferrer">
+                  {url}
+                </a>
+              </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {license && (
+        <section className="source-list">
+          <p className="license">
+            Licencia de la entrada: {license.name || license}
+            {license.url && (
+              <> · <a href={license.url} target="_blank" rel="noopener noreferrer">Ver licencia</a></>
+            )}
+          </p>
+        </section>
+      )}
+
+      {onSave && (
+        <div className="result-actions">
+          <button
+            onClick={() => onSave(result)}
+            className="word-link save-button"
+            aria-label={`Guardar ${result.word} en Mi Lexicon`}
+          >
+            Guardar en Mi Léxico
+          </button>
         </div>
       )}
-
-      {hasSynonyms && !showFull && result.synonyms.length > 0 && (
-        <p className="all-synonyms">
-          <strong>Sinónimos:</strong> {result.synonyms.join(', ')}
-        </p>
-      )}
-
-      {result.sourceUrls && result.sourceUrls.length > 0 && (
-        <p className="source">
-          <small>
-            Fuente: <a href={result.sourceUrls[0]} target="_blank" rel="noopener noreferrer">
-              Dictionary API
-            </a>
-          </small>
-        </p>
-      )}
-
-      <div className="result-actions">
-        <button 
-          onClick={() => onSave(result)}
-          className="save-button"
-          aria-label={`Guardar ${result.word} en Mi Léxico`}
-        >
-          Guardar en Mi Léxico
-        </button>
-      </div>
-    </section>
+    </div>
   );
 }
 

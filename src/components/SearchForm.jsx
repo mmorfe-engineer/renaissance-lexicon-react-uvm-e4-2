@@ -1,21 +1,22 @@
 /**
  * SearchForm component
  * Controlled input for dictionary search with validation
+ * Ported from 4.1 visual design
  */
-import { useRef, useEffect, useState } from 'react';
-import { useDictionary, SEARCH_STATUS } from '../hooks/useDictionary';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { SEARCH_STATUS } from '../hooks/useDictionary';
 import { validateWord } from '../utils/validation';
 
-export function SearchForm({ onSearchComplete }) {
-  const { 
-    query, 
-    setQuery, 
-    status, 
-    result, 
-    error,
-    search,
-    clear 
-  } = useDictionary();
+// SVG search icon from 4.1
+const SearchIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24">
+    <circle cx="10.5" cy="10.5" r="6.5" />
+    <path d="m16 16 5 5" />
+  </svg>
+);
+
+export function SearchForm({ dictionary }) {
+  const { query, setQuery, status, search } = dictionary;
 
   const inputRef = useRef(null);
   const [validationError, setValidationError] = useState(null);
@@ -27,13 +28,6 @@ export function SearchForm({ onSearchComplete }) {
     }
   }, []);
 
-  // Notify parent when search completes
-  useEffect(() => {
-    if (status === SEARCH_STATUS.SUCCESS && result && onSearchComplete) {
-      onSearchComplete(result);
-    }
-  }, [status, result, onSearchComplete]);
-
   // Clear validation error when query changes
   useEffect(() => {
     if (query.trim() === '') {
@@ -41,88 +35,72 @@ export function SearchForm({ onSearchComplete }) {
     }
   }, [query]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     setQuery(e.target.value);
-    // Validate on change
-    const trimmed = e.target.value.trim();
-    if (trimmed) {
-      const validation = validateWord(trimmed);
-      setValidationError(validation.isValid ? null : validation.error);
-    } else {
-      setValidationError(null);
-    }
-  };
+  }, [setQuery]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     if (e) e.preventDefault();
-    
+
     const trimmedQuery = query.trim();
-    
-    // Validate before search
+
     if (!trimmedQuery) {
       return;
     }
-    
+
     const validation = validateWord(trimmedQuery);
     if (!validation.isValid) {
       setValidationError(validation.error);
       return;
     }
-    
+
     setValidationError(null);
     search(trimmedQuery);
-  };
+  }, [query, search]);
 
   const isLoading = status === SEARCH_STATUS.LOADING;
-  const hasApiError = status === SEARCH_STATUS.ERROR || status === SEARCH_STATUS.NOT_FOUND;
 
   return (
-    <form onSubmit={handleSubmit} className="search-form">
-      <div className="search-input-wrapper">
-        <label htmlFor="search-input" className="visually-hidden">
-          Buscar palabra
-        </label>
+    <form onSubmit={handleSubmit} id="search-form" role="search" noValidate>
+      <label className="search-label" htmlFor="word">
+        ¿Qué palabra quieres descubrir?
+      </label>
+
+      <div className="search-box">
+        <SearchIcon />
         <input
           ref={inputRef}
-          id="search-input"
-          type="text"
+          id="word"
+          name="word"
+          type="search"
           value={query}
           onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Buscar palabra (ej: house)"
-          aria-label="Buscar palabra"
-          aria-busy={isLoading}
+          placeholder="Escribe una palabra en inglés…"
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck="false"
+          maxLength={80}
+          aria-describedby="search-help validation"
           aria-invalid={!!validationError}
-          aria-describedby={validationError ? 'validation-error' : undefined}
           disabled={isLoading}
-          className="search-input"
         />
-        <button
-          type="submit"
-          disabled={isLoading || !query.trim() || !!validationError}
-          className="search-button"
-          aria-label="Buscar"
-        >
-          {isLoading ? 'Buscando...' : 'Buscar'}
+        <button type="submit" disabled={isLoading || !query.trim() || !!validationError}>
+          Buscar <span aria-hidden="true">↗</span>
         </button>
       </div>
-      {hasApiError && (
-        <p className="search-error" role="alert">
-          {error === 'Word not found' ? 'Palabra no encontrada' : error}
-        </p>
-      )}
+
+      <div className="search-notes">
+        <p id="search-help">Diccionario en inglés · Búsqueda automática al dejar de escribir.</p>
+        <span>Dictionary API</span>
+      </div>
+
       {validationError && (
-        <p className="search-error" id="validation-error" role="alert">
+        <p id="validation" className="validation" role="alert">
           {validationError}
         </p>
       )}
+
+
     </form>
   );
 }

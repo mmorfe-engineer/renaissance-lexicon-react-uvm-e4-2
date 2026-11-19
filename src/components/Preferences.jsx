@@ -1,8 +1,9 @@
 /**
  * Preferences component
  * Theme and typography settings
+ * Ported from 4.1 compact design
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const THEMES = {
   SYSTEM: 'system',
@@ -18,12 +19,18 @@ const FONTS = {
   MONO: 'mono'
 };
 
-const FONT_LABELS = {
-  [FONTS.EDITORIAL]: 'Editorial',
-  [FONTS.CLASSIC]: 'Clasica',
-  [FONTS.SANS]: 'Sans',
-  [FONTS.HUMANIST]: 'Humanista',
-  [FONTS.MONO]: 'Mono'
+const FONT_OPTIONS = {
+  [FONTS.EDITORIAL]: 'Editorial · Noto Serif',
+  [FONTS.CLASSIC]: 'Clásica · Liberation',
+  [FONTS.SANS]: 'Moderna · Noto Sans',
+  [FONTS.HUMANIST]: 'Humanista · DejaVu',
+  [FONTS.MONO]: 'Código · DejaVu Mono'
+};
+
+const THEME_OPTIONS = {
+  [THEMES.SYSTEM]: 'Sistema',
+  [THEMES.LIGHT]: 'Claro',
+  [THEMES.DARK]: 'Oscuro'
 };
 
 const PREFERENCES_KEY = 'renaissance-lexicon-react-preferences';
@@ -60,13 +67,12 @@ function savePreferences(prefs) {
 function applyTheme(theme) {
   const html = document.documentElement;
   
-  // Apply theme via data attribute
   if (theme === THEMES.DARK) {
     html.setAttribute('data-theme', 'dark');
   } else if (theme === THEMES.LIGHT) {
     html.setAttribute('data-theme', 'light');
   } else {
-    // System - check prefers-color-scheme
+    // System
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
   }
@@ -76,8 +82,7 @@ function applyTheme(theme) {
  * Apply font to document
  */
 function applyFont(font) {
-  const body = document.body;
-  body.setAttribute('data-font', font);
+  document.body.setAttribute('data-font', font);
 }
 
 /**
@@ -86,7 +91,7 @@ function applyFont(font) {
 function setupThemeWatcher() {
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   
-  const handler = (e) => {
+  const handler = () => {
     const prefs = loadPreferences();
     if (prefs.theme === THEMES.SYSTEM) {
       applyTheme(THEMES.SYSTEM);
@@ -117,56 +122,48 @@ export function Preferences() {
     savePreferences(prefs);
   }, [prefs]);
 
-  const handleThemeChange = (theme) => {
-    setPrefs(prev => ({ ...prev, theme }));
-  };
+  const handleThemeChange = useCallback((e) => {
+    setPrefs(prev => ({ ...prev, theme: e.target.value }));
+  }, []);
 
-  const handleFontChange = (font) => {
-    setPrefs(prev => ({ ...prev, font }));
-  };
+  const handleFontChange = useCallback((e) => {
+    setPrefs(prev => ({ ...prev, font: e.target.value }));
+  }, []);
 
   return (
-    <section className="preferences" aria-labelledby="preferences-heading">
-      <h3 id="preferences-heading">Preferencias</h3>
-      
-      <div className="preference-group">
-        <label htmlFor="theme-select">Tema:</label>
+    <div className="preference-controls">
+      <div className="preference">
+        <label htmlFor="font">Tipografía</label>
         <select
-          id="theme-select"
+          id="font"
+          value={prefs.font}
+          onChange={handleFontChange}
+          aria-label="Seleccionar tipografía"
+        >
+          {Object.entries(FONT_OPTIONS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div className="preference">
+        <label htmlFor="theme">Tema</label>
+        <select
+          id="theme"
           value={prefs.theme}
-          onChange={(e) => handleThemeChange(e.target.value)}
+          onChange={handleThemeChange}
           aria-label="Seleccionar tema"
         >
-          <option value={THEMES.SYSTEM}>Sistema</option>
-          <option value={THEMES.LIGHT}>Claro</option>
-          <option value={THEMES.DARK}>Oscuro</option>
+          {Object.entries(THEME_OPTIONS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
         </select>
       </div>
-      
-      <div className="preference-group">
-        <label htmlFor="font-select">Tipografia:</label>
-        <select
-          id="font-select"
-          value={prefs.font}
-          onChange={(e) => handleFontChange(e.target.value)}
-          aria-label="Seleccionar tipografia"
-        >
-          <option value={FONTS.EDITORIAL}>{FONT_LABELS[FONTS.EDITORIAL]}</option>
-          <option value={FONTS.CLASSIC}>{FONT_LABELS[FONTS.CLASSIC]}</option>
-          <option value={FONTS.SANS}>{FONT_LABELS[FONTS.SANS]}</option>
-          <option value={FONTS.HUMANIST}>{FONT_LABELS[FONTS.HUMANIST]}</option>
-          <option value={FONTS.MONO}>{FONT_LABELS[FONTS.MONO]}</option>
-        </select>
-      </div>
-      
-      <div className="preference-info">
-        <p>
-          <small>
-            El tema "Sistema" usa la preferencia de tu sistema operativo.\n            "Claro" y "Oscuro" fuerzan ese modo especificamente.
-          </small>
-        </p>
-      </div>
-    </section>
+    </div>
   );
 }
 
